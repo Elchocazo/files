@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Fredoka', sans-serif;
+    background-color: #e0f2fe; /* Azul cielo suave */
+    color: #1e293b;
+    overflow: hidden;
+    user-select: none;
+}
+
+.soft-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 2rem;
+    border: 4px solid #bae6fd;
+    box-shadow: 0 10px 0 #bae6fd;
+    transition: all 0.2s ease;
+}
+
+.soft-button {
+    background: #ffffff;
+    border-radius: 1.5rem;
+    border: 3px solid #cbd5e1;
+    box-shadow: 0 6px 0 #cbd5e1;
+    transition: all 0.1s active;
+}
+.soft-button:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #cbd5e1;
+}
+
+.bg-pattern {
+    background-color: #e0f2fe;
+    background-image: radial-gradient(#bae6fd 2px, transparent 2px);
+    background-size: 30px 30px;
+}
+
+.nav-item-active {
+    background: #38bdf8 !important;
+    color: white !important;
+    border-color: #0ea5e9 !important;
+    box-shadow: 0 6px 0 #0ea5e9 !important;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(2deg); }
+}
+.floating { animation: float 4s ease-in-out infinite; }
+
+.shake { animation: shake 0.5s; }
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
