@@ -2,9 +2,10 @@
 
 body {
     font-family: 'Fredoka', sans-serif;
-    background-color: #e0f2fe; /* Azul cielo suave */
+    background-color: #e0f2fe;
+    /* Azul cielo suave */
     color: #1e293b;
-    overflow: hidden;
+    overflow-y: auto;
     user-select: none;
 }
 
@@ -23,6 +24,7 @@ body {
     box-shadow: 0 6px 0 #cbd5e1;
     transition: all 0.1s active;
 }
+
 .soft-button:active {
     transform: translateY(4px);
     box-shadow: 0 2px 0 #cbd5e1;
@@ -42,14 +44,37 @@ body {
 }
 
 @keyframes float {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-10px) rotate(2deg); }
-}
-.floating { animation: float 4s ease-in-out infinite; }
 
-.shake { animation: shake 0.5s; }
+    0%,
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-10px) rotate(2deg);
+    }
+}
+
+.floating {
+    animation: float 4s ease-in-out infinite;
+}
+
+.shake {
+    animation: shake 0.5s;
+}
+
 @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    75% {
+        transform: translateX(5px);
+    }
 }
