@@ -78,3 +78,30 @@ body {
         transform: translateX(5px);
     }
 }
+
+/* TEMAS */
+.theme-green {
+    background-color: #f0fdf4 !important;
+}
+
+.theme-green .bg-pattern {
+    background-color: #f0fdf4 !important;
+    background-image: radial-gradient(#bbf7d0 2px, transparent 2px) !important;
+}
+
+.theme-green header {
+    border-bottom-color: #dcfce7 !important;
+}
+
+.theme-pink {
+    background-color: #fdf2f8 !important;
+}
+
+.theme-pink .bg-pattern {
+    background-color: #fdf2f8 !important;
+    background-image: radial-gradient(#fbcfe8 2px, transparent 2px) !important;
+}
+
+.theme-pink header {
+    border-bottom-color: #fce7f3 !important;
+}
