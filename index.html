@@ -19,10 +19,10 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="h-screen flex flex-col bg-pattern">
+<body class="min-h-screen flex flex-col bg-pattern">
 
     <!-- CABECERA AMIGABLE -->
-    <header class="h-24 px-8 flex items-center justify-between bg-white border-b-4 border-sky-100">
+    <header class="h-24 px-8 flex items-center justify-between bg-white border-b-4 border-sky-100 flex-shrink-0">
         <div class="flex items-center gap-4">
             <div
                 class="w-16 h-16 bg-yellow-400 rounded-2xl flex items-center justify-center shadow-lg transform rotate-3">
@@ -55,23 +55,31 @@
 
     <main class="flex-grow flex p-6 gap-6">
         <!-- BARRA LATERAL -->
-        <aside class="w-80 flex flex-col gap-4">
+        <aside class="w-80 flex flex-col gap-4 flex-shrink-0">
             <div class="soft-card p-6 flex flex-col gap-4">
                 <h2 class="text-lg font-bold text-sky-800 flex items-center gap-2">
                     <span class="material-symbols-outlined">map</span> Tu Mapa
                 </h2>
                 <nav class="flex flex-col gap-3">
                     <button id="nav-1" onclick="loadModule(1)"
-                        class="soft-button nav-item-active w-full p-4 text-left font-bold flex items-center gap-3">
+                        class="soft-button nav-item-active w-full p-4 text-left font-bold flex items-center gap-3 transition-all">
                         <span class="material-symbols-outlined">school</span> 1. El Gran Repaso
                     </button>
                     <button id="nav-2" onclick="loadModule(2)"
-                        class="soft-button w-full p-4 text-left font-bold flex items-center gap-3">
+                        class="soft-button w-full p-4 text-left font-bold flex items-center gap-3 transition-all">
                         <span class="material-symbols-outlined">category</span> 2. El Clasificador
                     </button>
                     <button id="nav-3" onclick="loadModule(3)"
-                        class="soft-button w-full p-4 text-left font-bold flex items-center gap-3">
-                        <span class="material-symbols-outlined">timer</span> 3. Carrera Contra el Tiempo
+                        class="soft-button w-full p-4 text-left font-bold flex items-center gap-3 transition-all">
+                        <span class="material-symbols-outlined">timer</span> 3. Carrera Rápida
+                    </button>
+                    <button id="nav-4" onclick="loadModule(4)"
+                        class="soft-button w-full p-4 text-left font-bold flex items-center gap-3 transition-all opacity-50 cursor-not-allowed">
+                        <span class="material-symbols-outlined">search</span> 4. El Intruso
+                    </button>
+                    <button id="nav-5" onclick="loadModule(5)"
+                        class="soft-button w-full p-4 text-left font-bold flex items-center gap-3 transition-all opacity-50 cursor-not-allowed">
+                        <span class="material-symbols-outlined">gpp_maybe</span> 5. El Experto
                     </button>
                 </nav>
             </div>
@@ -221,7 +229,7 @@
 
             <!-- MODULO 3: CARRERA RÁPIDA -->
             <div id="module-3" class="hidden soft-card flex-grow p-10 flex flex-col items-center justify-center">
-                <h2 class="text-5xl font-black text-orange-500 mb-4">CARRERA DE ARCHIVOS</h2>
+                <h2 class="text-5xl font-black text-orange-500 mb-4">CARRERA RÁPIDA</h2>
                 <div id="timer-box" class="text-8xl font-black text-slate-800 mb-10 tabular-nums">00:30</div>
 
                 <div id="quick-game"
@@ -232,6 +240,40 @@
 
                     <div class="grid grid-cols-2 gap-4" id="quick-options">
                         <!-- Opciones se inyectan aquí -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULO 4: EL INTRUSO -->
+            <div id="module-4" class="hidden soft-card flex-grow p-10 flex flex-col items-center justify-center">
+                <h2 class="text-5xl font-black text-rose-500 mb-4 uppercase">¿Quién no debería estar aquí?</h2>
+                <p class="text-rose-400 mb-8 font-bold text-xl" id="intruder-clan-name">CLAN IMAGEN</p>
+
+                <div id="intruder-options" class="grid grid-cols-2 gap-6 w-full max-w-2xl">
+                    <!-- Opciones se inyectarán aquí -->
+                </div>
+
+                <div class="mt-10 bg-slate-50 p-6 rounded-3xl border-4 border-rose-100 text-center">
+                    <div class="text-sm font-bold text-rose-400 uppercase mb-2">Puntos</div>
+                    <div id="game4-score" class="text-6xl font-black text-rose-600">0</div>
+                    <div class="mt-4 text-xs text-rose-400">¡Encuentra 10 intrusos para pasar!</div>
+                </div>
+            </div>
+
+            <!-- MODULO 5: EL EXPERTO EN SEGURIDAD -->
+            <div id="module-5" class="hidden soft-card flex-grow p-10 flex flex-col items-center justify-center">
+                <h2 class="text-5xl font-black text-emerald-600 mb-4 uppercase">Especialista Forense</h2>
+                <p class="text-emerald-500 mb-10 text-xl font-medium">¡Repara estos archivos dañados!</p>
+
+                <div id="security-game" class="w-full max-w-3xl space-y-4">
+                    <!-- Los retos se inyectarán aquí -->
+                </div>
+
+                <div class="mt-10 flex flex-col items-center">
+                    <div class="text-sm font-bold text-emerald-400 uppercase mb-2">Progreso</div>
+                    <div class="w-64 h-4 bg-emerald-100 rounded-full overflow-hidden border-2 border-emerald-200">
+                        <div id="game5-progress" class="h-full bg-emerald-500 transition-all duration-300"
+                            style="width: 0%"></div>
                     </div>
                 </div>
             </div>
