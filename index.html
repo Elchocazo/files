@@ -42,6 +42,11 @@
 
         <div class="flex items-center gap-6">
             <div
+                class="bg-yellow-100 text-yellow-600 px-6 py-2 rounded-2xl font-bold flex items-center gap-2 border-2 border-yellow-200">
+                <span class="material-symbols-outlined">payments</span>
+                <span class="coin-val">0</span>
+            </div>
+            <div
                 class="bg-orange-100 text-orange-600 px-6 py-2 rounded-2xl font-bold flex items-center gap-2 border-2 border-orange-200">
                 <span class="material-symbols-outlined">stars</span>
                 <span id="xp-val">0 XP</span>
@@ -81,13 +86,20 @@
                         class="soft-button w-full p-4 text-left font-bold flex items-center gap-3 transition-all opacity-50 cursor-not-allowed">
                         <span class="material-symbols-outlined">gpp_maybe</span> 5. El Experto
                     </button>
+
+                    <hr class="my-2 border-sky-100">
+
+                    <button id="nav-shop" onclick="loadModule(99)"
+                        class="soft-button w-full p-4 text-left font-bold flex items-center gap-3 transition-all bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100">
+                        <span class="material-symbols-outlined">shopping_cart</span> ¡TIENDA!
+                    </button>
                 </nav>
             </div>
 
             <div class="soft-card flex-grow p-6 flex flex-col items-center justify-center text-center">
                 <div id="mascot-container"
                     class="w-32 h-32 floating mb-4 bg-sky-100 rounded-full flex items-center justify-center">
-                    <span class="material-symbols-outlined text-sky-500 text-6xl">smart_toy</span>
+                    <span id="mascot-icon" class="material-symbols-outlined text-sky-500 text-6xl">smart_toy</span>
                 </div>
                 <div class="bg-sky-50 p-4 rounded-2xl text-sm text-sky-700 font-medium leading-snug" id="dialogue">
                     "¡Hola! Soy Bit. ¡Vamos a aprender los apellidos de los archivos escribiéndolos!"
@@ -275,6 +287,25 @@
                         <div id="game5-progress" class="h-full bg-emerald-500 transition-all duration-300"
                             style="width: 0%"></div>
                     </div>
+                </div>
+            </div>
+
+            <!-- MODULO TIENDA -->
+            <div id="module-shop" class="hidden soft-card flex-grow p-10 flex flex-col">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h2 class="text-4xl font-black text-yellow-600">La Super Tienda</h2>
+                        <p class="text-yellow-500 font-bold">¡Usa tus Archicoins para personalizar a Bit!</p>
+                    </div>
+                    <div
+                        class="bg-yellow-100 text-yellow-600 px-8 py-4 rounded-3xl font-black text-3xl border-4 border-yellow-200 flex items-center gap-3">
+                        <span class="material-symbols-outlined text-4xl">payments</span>
+                        <span class="coin-val">0</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-6 overflow-y-auto pr-4" id="shop-items-container">
+                    <!-- Los items se inyectarán aquí por JS -->
                 </div>
             </div>
         </section>
