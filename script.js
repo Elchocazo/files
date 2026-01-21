@@ -1,6 +1,7 @@
 // ESTADO
 const state = {
     xp: 0,
+    coins: 0,
     unlockedSteps: 1,
     tutorialInputs: 0,
     game2Score: 0,
@@ -8,8 +9,38 @@ const state = {
     game3Time: 30,
     game4Score: 0,
     game5Score: 0,
-    currentModule: 1
+    currentModule: 1,
+    inventory: ['skin-bot'],
+    activeSkin: 'skin-bot'
 };
+
+function saveGame() {
+    localStorage.setItem('mundoArchivoData', JSON.stringify({
+        xp: state.xp,
+        coins: state.coins,
+        unlockedSteps: state.unlockedSteps,
+        inventory: state.inventory,
+        activeSkin: state.activeSkin
+    }));
+}
+
+function loadGame() {
+    const data = localStorage.getItem('mundoArchivoData');
+    if (data) {
+        const parsed = JSON.parse(data);
+        state.xp = parsed.xp || 0;
+        state.coins = parsed.coins || 0;
+        state.unlockedSteps = parsed.unlockedSteps || 1;
+        state.inventory = parsed.inventory || ['skin-bot'];
+        state.activeSkin = parsed.activeSkin || 'skin-bot';
+
+        updateXpUI();
+        updateCoinsUI();
+        updateMascotUI();
+        // Cargar el módulo más alto desbloqueado
+        loadModule(state.unlockedSteps);
+    }
+}
 
 const clans = {
     'texto': ['.doc', '.pdf', '.txt'],
@@ -39,16 +70,50 @@ function playSfx(type) {
     else if (type === 'win') synth.triggerAttackRelease(["F4", "A4", "C5", "E5"], "4n");
 }
 
+// ACTUALIZACIONES DE UI
+function updateXpUI() {
+    document.getElementById('xp-val').innerText = `${state.xp} XP`;
+    const prog = Math.min((state.xp / 1000) * 100, 100);
+    document.getElementById('xp-bar').style.width = prog + "%";
+
+    if (state.xp > 200) document.getElementById('rank-name').innerText = "Nivel 2: Detective Digital";
+    if (state.xp > 400) document.getElementById('rank-name').innerText = "Nivel 3: Maestro de Archivos";
+    if (state.xp > 700) document.getElementById('rank-name').innerText = "Nivel 4: Guardián de Datos";
+    if (state.xp > 900) document.getElementById('rank-name').innerText = "Nivel 5: Sabio del Sistema";
+}
+
+function updateCoinsUI() {
+    document.querySelectorAll('.coin-val').forEach(el => el.innerText = state.coins);
+}
+
+const skins = {
+    'skin-bot': { icon: 'smart_toy', name: 'Bit Normal' },
+    'skin-rocket': { icon: 'rocket_launch', name: 'Bit Cohete' },
+    'skin-robot': { icon: 'robot_2', name: 'Premium Bot' },
+    'skin-star': { icon: 'star', name: 'Súper Bit' }
+};
+
+function updateMascotUI() {
+    const skin = skins[state.activeSkin] || skins['skin-bot'];
+    document.getElementById('mascot-icon').innerText = skin.icon;
+}
+
 // NAVEGACIÓN
 function loadModule(num) {
-    if (num > state.unlockedSteps) return;
+    if (num > state.unlockedSteps && num !== 99) return; // 99 para la tienda
 
     state.currentModule = num;
     document.querySelectorAll('section > div').forEach(div => div.classList.add('hidden'));
-    document.getElementById(`module-${num}`).classList.remove('hidden');
+
+    if (num === 99) {
+        document.getElementById('module-shop').classList.remove('hidden');
+    } else {
+        document.getElementById(`module-${num}`).classList.remove('hidden');
+    }
 
     document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('nav-item-active'));
-    document.getElementById(`nav-${num}`).classList.add('nav-item-active');
+    if (num !== 99) document.getElementById(`nav-${num}`).classList.add('nav-item-active');
+    else document.getElementById('nav-shop').classList.add('nav-item-active');
 
     // Actualizar visual de botones bloqueados
     for (let i = 1; i <= 5; i++) {
@@ -64,6 +129,7 @@ function loadModule(num) {
     if (num === 3) initModule3();
     if (num === 4) initModule4();
     if (num === 5) initModule5();
+    if (num === 99) initShop();
 }
 
 // MODULO 1: TUTORIAL
@@ -170,22 +236,55 @@ function nextItem3() {
 
     // Crear opciones incluyendo la correcta
     const options = [item.ext];
+    const otherClans = Object.keys(clans).filter(c => c !== item.clan);
+
+    // Tomar una extensión aleatoria de cada uno de los otros clanes (máximo 3)
+    let distractorClans = [...otherClans].sort(() => Math.random() - 0.5);
+    while (options.length < 4 && distractorClans.length > 0) {
+        const clanName = distractorClans.pop();
+        const extensions = clans[clanName];
+        const randomExt = extensions[Math.floor(Math.random() * extensions.length)];
+        if (!options.includes(randomExt)) options.push(randomExt);
+    }
+
+    // Si aún faltan (aunque con 4 clanes no debería), rellenar con cualquier cosa única
     while (options.length < 4) {
-        const randomExt = filesData[Math.floor(Math.random() * filesData.length)].ext;
+        const allExts = Object.values(clans).flat();
+        const randomExt = allExts[Math.floor(Math.random() * allExts.length)];
         if (!options.includes(randomExt)) options.push(randomExt);
     }
 
     options.sort(() => Math.random() - 0.5).forEach(opt => {
         const btn = document.createElement('button');
-        btn.className = "soft-button p-6 text-3xl font-black text-sky-700 hover:bg-sky-50";
+        btn.className = "soft-button p-6 text-3xl font-black text-sky-700 hover:bg-sky-50 transition-all";
         btn.innerText = opt;
         btn.onclick = () => {
+            if (btn.disabled) return;
+
             if (opt === item.ext) {
                 playSfx('correct');
                 addXp(10);
                 nextItem3();
             } else {
                 playSfx('wrong');
+                state.game3Time = Math.max(0, state.game3Time - 3); // Penalización de 3 segundos
+                document.getElementById('timer-box').innerText = `00:${state.game3Time < 10 ? '0' : ''}${state.game3Time}`;
+                document.getElementById('timer-box').classList.add('text-rose-600', 'shake');
+
+                // Bloquear todos los botones brevemente
+                const allBtns = optionsDiv.querySelectorAll('button');
+                allBtns.forEach(b => {
+                    b.disabled = true;
+                    b.classList.add('opacity-50', 'bg-rose-50');
+                });
+
+                setTimeout(() => {
+                    document.getElementById('timer-box').classList.remove('text-rose-600', 'shake');
+                    allBtns.forEach(b => {
+                        b.disabled = false;
+                        b.classList.remove('opacity-50', 'bg-rose-50');
+                    });
+                }, 500);
             }
         };
         optionsDiv.appendChild(btn);
@@ -215,11 +314,20 @@ function nextItem4() {
 
     let options = [{ ext: intruderExt, correct: false }];
 
-    // Tomar 3 correctas aleatorias (si hay suficientes) o repetir
+    // Intentar agregar correctas únicas
+    let availableCorrect = [...correctExts];
+    while (options.length < 4 && availableCorrect.length > 0) {
+        const randomIndex = Math.floor(Math.random() * availableCorrect.length);
+        const ext = availableCorrect.splice(randomIndex, 1)[0];
+        options.push({ ext: ext, correct: true });
+    }
+
+    // Si aún faltan opciones (ej: clan con pocas extensiones), rellenar con otras extensiones para no romper el layout
     while (options.length < 4) {
-        const ext = correctExts[Math.floor(Math.random() * correctExts.length)];
-        if (!options.find(o => o.ext === ext)) {
-            options.push({ ext: ext, correct: true });
+        const randomClan = clanKeys[Math.floor(Math.random() * clanKeys.length)];
+        const randomExt = clans[randomClan][Math.floor(Math.random() * clans[randomClan].length)];
+        if (!options.find(o => o.ext === randomExt)) {
+            options.push({ ext: randomExt, correct: (randomClan === targetClan) });
         }
     }
 
@@ -309,17 +417,84 @@ function updateScore5() {
     document.getElementById('game5-progress').style.width = prog + "%";
 }
 
+// TIENDA
+const shopItems = [
+    { id: 'skin-rocket', name: 'Bit Cohete', price: 100, icon: 'rocket_launch', type: 'skin' },
+    { id: 'skin-robot', name: 'Premium Bot', price: 250, icon: 'robot_2', type: 'skin' },
+    { id: 'skin-star', name: 'Súper Bit', price: 500, icon: 'star', type: 'skin' },
+    { id: 'theme-green', name: 'Tema Esmeralda', price: 150, icon: 'palette', type: 'theme' },
+    { id: 'theme-pink', name: 'Tema Rosado', price: 150, icon: 'palette', type: 'theme' }
+];
+
+function initShop() {
+    const container = document.getElementById('shop-items-container');
+    container.innerHTML = '';
+
+    shopItems.forEach(item => {
+        const isOwned = state.inventory.includes(item.id);
+        const isActive = state.activeSkin === item.id || (item.type === 'theme' && document.body.classList.contains(item.id));
+
+        const card = document.createElement('div');
+        card.className = `soft-card p-6 flex flex-col items-center gap-4 transition-all ${isActive ? 'border-sky-500 bg-sky-50' : ''}`;
+
+        card.innerHTML = `
+            <span class="material-symbols-outlined text-6xl ${isActive ? 'text-sky-500' : 'text-slate-400'}">${item.icon}</span>
+            <div class="text-center">
+                <div class="font-black text-xl text-slate-700">${item.name}</div>
+                <div class="text-sm font-bold text-slate-400">${item.type === 'skin' ? 'Aspecto para Bit' : 'Color de Sistema'}</div>
+            </div>
+            <button onclick="handleShopAction('${item.id}')" 
+                class="w-full py-3 rounded-2xl font-black text-lg transition-all ${isActive ? 'bg-sky-500 text-white cursor-default' :
+                isOwned ? 'bg-slate-200 text-slate-500 hover:bg-slate-300' :
+                    state.coins >= item.price ? 'bg-yellow-400 text-white hover:bg-yellow-500 shadow-md' :
+                        'bg-slate-100 text-slate-300 cursor-not-allowed'
+            }">
+                ${isActive ? 'ACTIVO' : isOwned ? 'EQUIPAR' : `${item.price} 🪙`}
+            </button>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function handleShopAction(id) {
+    const item = shopItems.find(i => i.id === id);
+    const isOwned = state.inventory.includes(id);
+
+    if (isOwned) {
+        if (item.type === 'skin') {
+            state.activeSkin = id;
+            updateMascotUI();
+        } else if (item.type === 'theme') {
+            applyTheme(id);
+        }
+        initShop();
+        saveGame();
+    } else if (state.coins >= item.price) {
+        state.coins -= item.price;
+        state.inventory.push(id);
+        playSfx('win');
+        updateCoinsUI();
+        handleShopAction(id); // Auto-equipar después de comprar
+    }
+}
+
+function applyTheme(themeId) {
+    document.body.classList.remove('theme-green', 'theme-pink');
+    if (themeId !== 'default') document.body.classList.add(themeId);
+}
+
 function addXp(val) {
     state.xp += val;
-    document.getElementById('xp-val').innerText = `${state.xp} XP`;
-    const prog = Math.min((state.xp / 1000) * 100, 100);
-    document.getElementById('xp-bar').style.width = prog + "%";
-
-    if (state.xp > 200) document.getElementById('rank-name').innerText = "Nivel 2: Detective Digital";
-    if (state.xp > 400) document.getElementById('rank-name').innerText = "Nivel 3: Maestro de Archivos";
-    if (state.xp > 700) document.getElementById('rank-name').innerText = "Nivel 4: Guardián de Datos";
-    if (state.xp > 900) document.getElementById('rank-name').innerText = "Nivel 5: Sabio del Sistema";
+    state.coins += Math.floor(val / 2); // Ganar monedas proporcional al XP
+    updateXpUI();
+    updateCoinsUI();
+    saveGame();
 }
+
+window.addEventListener('load', () => {
+    loadGame();
+    if (state.xp === 0) updateXpUI(); // Primera carga
+});
 
 function downloadApp() {
     const html = `
