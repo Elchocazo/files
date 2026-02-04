@@ -105,12 +105,12 @@ function submitLogin() {
         return;
     }
 
-    state.userName = nameInput;
     state.userGrade = gradeInput;
     hideLoginModal();
     updateUserInfoUI();
     addAchievement('first_login');
     saveGame();
+    loadModule(1);
 }
 
 const clans = {
@@ -252,8 +252,15 @@ function loadModule(num) {
     }
 
     document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('nav-item-active'));
-    if (num !== 99) document.getElementById(`nav-${num}`).classList.add('nav-item-active');
-    else document.getElementById('nav-shop').classList.add('nav-item-active');
+    if (num !== 99) {
+        const navBtn = document.getElementById(`nav-${num}`);
+        if (navBtn) navBtn.classList.add('nav-item-active');
+    } else {
+        const shopBtn = document.getElementById('nav-shop');
+        if (shopBtn) shopBtn.classList.add('nav-item-active');
+    }
+
+    showInstructions(num);
 
     // Actualizar visual de botones bloqueados
     for (let i = 1; i <= 10; i++) {
