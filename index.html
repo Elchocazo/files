@@ -13,13 +13,82 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0"
         rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
     <!-- Custom Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="min-h-screen flex flex-col bg-pattern">
+
+    <!-- MODAL DE INSTRUCCIONES -->
+    <div id="instructions-modal"
+        class="hidden fixed inset-0 bg-sky-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-[3rem] p-10 max-w-2xl w-full shadow-2xl border-8 border-sky-100 transform transition-all">
+            <div class="flex items-center gap-6 mb-8">
+                <div
+                    class="w-20 h-20 bg-sky-500 rounded-3xl flex items-center justify-center shadow-lg transform -rotate-3">
+                    <span class="material-symbols-outlined text-white text-5xl">info</span>
+                </div>
+                <div>
+                    <h2 id="inst-title" class="text-4xl font-black text-sky-600">Cómo Jugar</h2>
+                    <p class="text-sky-400 font-bold">¡Bit te explica la misión!</p>
+                </div>
+            </div>
+
+            <div class="bg-sky-50 p-8 rounded-[2rem] border-4 border-sky-100 mb-8">
+                <p id="inst-content" class="text-xl text-sky-800 font-medium leading-relaxed italic">
+                    "Instrucciones aquí..."
+                </p>
+            </div>
+
+            <button onclick="closeInstructions()"
+                class="w-full py-5 bg-yellow-400 hover:bg-yellow-500 text-white rounded-2xl font-black text-2xl shadow-lg transform hover:scale-105 transition-all active:scale-95 flex items-center justify-center gap-3">
+                <span class="material-symbols-outlined text-3xl">play_circle</span> ¡ENTENDIDO, VAMOS!
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE IDENTIFICACIÓN -->
+    <div id="login-modal"
+        class="fixed inset-0 bg-sky-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-[3rem] p-10 max-w-md w-full shadow-2xl border-8 border-sky-100 transform transition-all">
+            <div class="flex flex-col items-center mb-8">
+                <div
+                    class="w-24 h-24 bg-yellow-400 rounded-3xl flex items-center justify-center shadow-lg mb-4 transform rotate-3">
+                    <span class="material-symbols-outlined text-white text-6xl">school</span>
+                </div>
+                <h2 class="text-3xl font-black text-sky-600 text-center">¡Bienvenido a Mundo Archivo!</h2>
+                <p class="text-sky-400 font-bold">Identifícate para comenzar tu aventura</p>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sky-600 font-black mb-2 uppercase text-sm">¿Cómo te llamas?</label>
+                    <input type="text" id="user-name-input" placeholder="Tu nombre artístico..."
+                        class="w-full px-6 py-4 rounded-2xl border-4 border-sky-50 focus:border-sky-300 outline-none text-xl font-bold text-sky-800 placeholder:text-sky-100 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sky-600 font-black mb-2 uppercase text-sm">¿En qué grado estás?</label>
+                    <select id="user-grade-input"
+                        class="w-full px-6 py-4 rounded-2xl border-4 border-sky-50 focus:border-sky-300 outline-none text-xl font-bold text-sky-800 appearance-none bg-white cursor-pointer transition-all">
+                        <option value="1">Primer Grado</option>
+                        <option value="2">Segundo Grado</option>
+                        <option value="3">Tercer Grado</option>
+                        <option value="4">Cuarto Grado</option>
+                        <option value="5">Quinto Grado</option>
+                    </select>
+                </div>
+
+                <button onclick="submitLogin()"
+                    class="w-full py-5 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-black text-2xl shadow-lg transform hover:scale-105 transition-all active:scale-95">
+                    ¡EMPEZAR AHORA!
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- CABECERA AMIGABLE -->
     <header class="h-24 px-8 flex items-center justify-between bg-white border-b-4 border-sky-100 flex-shrink-0">
@@ -85,6 +154,26 @@
                     <button id="nav-5" onclick="loadModule(5)"
                         class="soft-button w-full p-4 text-left font-bold flex items-center gap-3 transition-all opacity-50 cursor-not-allowed">
                         <span class="material-symbols-outlined">gpp_maybe</span> 5. El Experto
+                    </button>
+                    <button id="nav-6" onclick="loadModule(6)"
+                        class="soft-button w-full p-4 text-left font-bold flex items-center gap-3 transition-all opacity-50 cursor-not-allowed">
+                        <span class="material-symbols-outlined">search_check</span> 6. Detective Pro
+                    </button>
+                    <button id="nav-7" onclick="loadModule(7)"
+                        class="soft-button w-full p-4 text-left font-bold flex items-center gap-3 transition-all opacity-50 cursor-not-allowed">
+                        <span class="material-symbols-outlined">layers</span> 7. Orden Masivo
+                    </button>
+                    <button id="nav-8" onclick="loadModule(8)"
+                        class="soft-button w-full p-4 text-left font-bold flex items-center gap-3 transition-all opacity-50 cursor-not-allowed">
+                        <span class="material-symbols-outlined">error</span> 8. Caza Errores
+                    </button>
+                    <button id="nav-9" onclick="loadModule(9)"
+                        class="soft-button w-full p-4 text-left font-bold flex items-center gap-3 transition-all opacity-50 cursor-not-allowed">
+                        <span class="material-symbols-outlined">alarm_on</span> 9. Supervivencia
+                    </button>
+                    <button id="nav-10" onclick="loadModule(10)"
+                        class="soft-button w-full p-4 text-left font-bold flex items-center gap-3 transition-all opacity-50 cursor-not-allowed border-2 border-orange-400 text-orange-600">
+                        <span class="material-symbols-outlined">trophy</span> 10. GRAN MAESTRO
                     </button>
 
                     <hr class="my-2 border-sky-100">
@@ -288,6 +377,73 @@
                             style="width: 0%"></div>
                     </div>
                 </div>
+            </div>
+
+            <!-- MODULO 6: DETECTIVE DE ICONOS -->
+            <div id="module-6" class="hidden soft-card flex-grow p-10 flex flex-col items-center justify-center">
+                <h2 class="text-5xl font-black text-cyan-600 mb-4 uppercase text-center">El Detective Visual</h2>
+                <div class="bg-cyan-50 p-6 rounded-3xl border-4 border-cyan-100 mb-8 max-w-xl text-center">
+                    <span id="m6-icon" class="material-symbols-outlined text-9xl text-cyan-500">?</span>
+                    <p class="mt-4 text-xl font-bold text-cyan-800">¿Qué tipo de archivo usa este icono?</p>
+                </div>
+                <div id="m6-options" class="grid grid-cols-2 gap-4 w-full max-w-2xl"></div>
+            </div>
+
+            <!-- MODULO 7: ORDEN MASIVO -->
+            <div id="module-7" class="hidden soft-card flex-grow p-10 flex flex-col items-center">
+                <h2 class="text-5xl font-black text-indigo-600 mb-4">LLUVIA DE ARCHIVOS</h2>
+                <div class="flex gap-4 mb-8" id="m7-targets">
+                    <div class="bucket-sm p-4 bg-blue-100 border-2 border-blue-300 rounded-2xl text-xs font-bold"
+                        data-clan="texto">TEXTO</div>
+                    <div class="bucket-sm p-4 bg-pink-100 border-2 border-pink-300 rounded-2xl text-xs font-bold"
+                        data-clan="imagen">IMAGEN</div>
+                    <div class="bucket-sm p-4 bg-yellow-100 border-2 border-yellow-300 rounded-2xl text-xs font-bold"
+                        data-clan="audio">AUDIO</div>
+                    <div class="bucket-sm p-4 bg-emerald-100 border-2 border-emerald-300 rounded-2xl text-xs font-bold"
+                        data-clan="video">VIDEO</div>
+                </div>
+                <div id="m7-queue"
+                    class="flex gap-4 flex-wrap justify-center overflow-y-auto max-h-96 p-4 bg-slate-50 rounded-3xl border-4 border-dashed border-indigo-100">
+                </div>
+            </div>
+
+            <!-- MODULO 8: CAZA ERRORES -->
+            <div id="module-8" class="hidden soft-card flex-grow p-10 flex flex-col items-center justify-center">
+                <h2 class="text-5xl font-black text-red-500 mb-4 uppercase">¿Original o Copia?</h2>
+                <div id="m8-card"
+                    class="bg-white p-10 rounded-[3rem] border-8 border-red-100 shadow-xl flex flex-col items-center">
+                    <div class="text-7xl mb-6 font-bold text-center" id="m8-file-view">foto_vacaciones.mp3</div>
+                    <p class="text-slate-400 font-bold mb-8 uppercase text-xl text-center">¿La extensión coincide con el
+                        nombre?</p>
+                    <div class="flex gap-8">
+                        <button onclick="checkM8(true)"
+                            class="soft-button px-12 py-6 bg-green-500 text-white text-3xl font-black rounded-3xl">CORRECTO</button>
+                        <button onclick="checkM8(false)"
+                            class="soft-button px-12 py-6 bg-red-500 text-white text-3xl font-black rounded-3xl">FALSO</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULO 9: SUPERVIVENCIA -->
+            <div id="module-9" class="hidden soft-card flex-grow p-10 flex flex-col items-center justify-center">
+                <h2 class="text-5xl font-black text-slate-800 mb-4">RETO EXTREMO</h2>
+                <div id="m9-timer" class="text-9xl font-black text-red-600 mb-6 tabular-nums">15</div>
+                <div class="text-3xl font-bold text-slate-400 mb-10 text-center" id="m9-file">video.avi</div>
+                <div id="m9-options" class="grid grid-cols-2 gap-4 w-full max-w-2xl"></div>
+            </div>
+
+            <!-- MODULO 10: GRAN MAESTRO -->
+            <div id="module-10"
+                class="hidden soft-card flex-grow p-4 md:p-10 flex flex-col items-center justify-center bg-gradient-to-b from-orange-50 to-white relative">
+                <div
+                    class="md:absolute top-10 right-10 flex items-center gap-2 bg-white p-4 rounded-2xl shadow-md border-2 border-orange-200 mb-4 md:mb-0">
+                    <span class="material-symbols-outlined text-orange-500">favorite</span>
+                    <span id="boss-lives" class="text-2xl font-black text-orange-600">❤❤❤</span>
+                </div>
+                <h2 class="text-6xl font-black text-orange-600 mb-2 text-center">EXAMEN FINAL</h2>
+                <p id="boss-task" class="text-2xl text-orange-400 font-bold mb-10 text-center">¡Resuelve el acertijo
+                    antes de que sea tarde!</p>
+                <div id="boss-arena" class="w-full max-w-4xl min-h-[400px] flex items-center justify-center"></div>
             </div>
 
             <!-- MODULO TIENDA -->
