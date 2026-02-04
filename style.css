@@ -105,3 +105,41 @@ body {
 .theme-pink header {
     border-bottom-color: #fce7f3 !important;
 }
+
+.theme-dark {
+    background-color: #0f172a !important;
+    color: #38bdf8 !important;
+}
+
+.theme-dark .bg-pattern {
+    background-color: #0f172a !important;
+    background-image: radial-gradient(#1e293b 2px, transparent 2px) !important;
+}
+
+.theme-dark header {
+    background-color: #1e293b !important;
+    border-bottom-color: #334155 !important;
+    color: #38bdf8 !important;
+}
+
+.theme-dark aside {
+    background-color: #1e293b !important;
+    border-right-color: #334155 !important;
+}
+
+.theme-dark .soft-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: white !important;
+}
+
+.theme-dark .soft-button {
+    background-color: #334155 !important;
+    color: #38bdf8 !important;
+    border-color: #475569 !important;
+}
+
+.theme-dark h1,
+.theme-dark h2 {
+    color: #38bdf8 !important;
+}
