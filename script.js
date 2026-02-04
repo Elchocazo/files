@@ -11,20 +11,49 @@ const state = {
     game5Score: 0,
     currentModule: 1,
     inventory: ['skin-bot'],
-    activeSkin: 'skin-bot'
+    activeSkin: 'skin-bot',
+    userName: '',
+    userGrade: '1',
+    lastLogin: Date.now(),
+    achievements: []
 };
 
+const SESSION_TIMEOUT = 1000 * 60 * 60 * 48; // 48 horas en milisegundos
+
+function resetProgressIfInactive() {
+    const data = localStorage.getItem('mundoArchivoData');
+    if (data) {
+        const parsed = JSON.parse(data);
+        if (parsed.lastLogin && (Date.now() - parsed.lastLogin > SESSION_TIMEOUT)) {
+            localStorage.removeItem('mundoArchivoData');
+            console.log("Progreso reiniciado por inactividad prolongada.");
+            return true;
+        }
+    }
+    return false;
+}
+
 function saveGame() {
+    state.lastLogin = Date.now();
     localStorage.setItem('mundoArchivoData', JSON.stringify({
         xp: state.xp,
         coins: state.coins,
         unlockedSteps: state.unlockedSteps,
         inventory: state.inventory,
-        activeSkin: state.activeSkin
+        activeSkin: state.activeSkin,
+        userName: state.userName,
+        userGrade: state.userGrade,
+        lastLogin: state.lastLogin,
+        achievements: state.achievements
     }));
 }
 
 function loadGame() {
+    if (resetProgressIfInactive()) {
+        showLoginModal();
+        return;
+    }
+
     const data = localStorage.getItem('mundoArchivoData');
     if (data) {
         const parsed = JSON.parse(data);
@@ -33,13 +62,55 @@ function loadGame() {
         state.unlockedSteps = parsed.unlockedSteps || 1;
         state.inventory = parsed.inventory || ['skin-bot'];
         state.activeSkin = parsed.activeSkin || 'skin-bot';
+        state.userName = parsed.userName || '';
+        state.userGrade = parsed.userGrade || '1';
+        state.achievements = parsed.achievements || [];
+
+        if (state.userName) {
+            hideLoginModal();
+            updateUserInfoUI();
+        } else {
+            showLoginModal();
+        }
 
         updateXpUI();
         updateCoinsUI();
         updateMascotUI();
-        // Cargar el módulo más alto desbloqueado
         loadModule(state.unlockedSteps);
+    } else {
+        showLoginModal();
     }
+}
+
+function showLoginModal() {
+    document.getElementById('login-modal').classList.remove('hidden');
+}
+
+function hideLoginModal() {
+    document.getElementById('login-modal').classList.add('hidden');
+}
+
+function updateUserInfoUI() {
+    if (state.userName) {
+        document.getElementById('rank-name').innerHTML = `<span class="text-sky-600">${state.userName}</span> - Grado: ${state.userGrade}°`;
+    }
+}
+
+function submitLogin() {
+    const nameInput = document.getElementById('user-name-input').value.trim();
+    const gradeInput = document.getElementById('user-grade-input').value;
+
+    if (!nameInput) {
+        alert("¡Por favor ingresa tu nombre para empezar!");
+        return;
+    }
+
+    state.userName = nameInput;
+    state.userGrade = gradeInput;
+    hideLoginModal();
+    updateUserInfoUI();
+    addAchievement('first_login');
+    saveGame();
 }
 
 const clans = {
@@ -62,24 +133,21 @@ const filesData = [
     { name: 'Meme_Gracioso', ext: '.gif', clan: 'imagen', icon: 'gif' }
 ];
 
-// SONIDO
-const synth = new Tone.PolySynth(Tone.Synth).toDestination();
-function playSfx(type) {
-    if (type === 'correct') synth.triggerAttackRelease(["C4", "E4", "G4"], "8n");
-    else if (type === 'wrong') synth.triggerAttackRelease(["C3", "Db3"], "4n");
-    else if (type === 'win') synth.triggerAttackRelease(["F4", "A4", "C5", "E5"], "4n");
-}
-
 // ACTUALIZACIONES DE UI
 function updateXpUI() {
     document.getElementById('xp-val').innerText = `${state.xp} XP`;
-    const prog = Math.min((state.xp / 1000) * 100, 100);
+    const prog = Math.min((state.xp / 10000) * 100, 100);
     document.getElementById('xp-bar').style.width = prog + "%";
 
     if (state.xp > 200) document.getElementById('rank-name').innerText = "Nivel 2: Detective Digital";
     if (state.xp > 400) document.getElementById('rank-name').innerText = "Nivel 3: Maestro de Archivos";
     if (state.xp > 700) document.getElementById('rank-name').innerText = "Nivel 4: Guardián de Datos";
     if (state.xp > 900) document.getElementById('rank-name').innerText = "Nivel 5: Sabio del Sistema";
+    if (state.xp > 1500) document.getElementById('rank-name').innerText = "Nivel 6: Arquivero de Élite";
+    if (state.xp > 2500) document.getElementById('rank-name').innerText = "Nivel 7: Cripto-Clasificador";
+    if (state.xp > 4000) document.getElementById('rank-name').innerText = "Nivel 8: Comandante de Datos";
+    if (state.xp > 6000) document.getElementById('rank-name').innerText = "Nivel 9: Oráculo Binario";
+    if (state.xp > 10000) document.getElementById('rank-name').innerText = "Nivel 10: LEYENDA DIGITAL";
 }
 
 function updateCoinsUI() {
@@ -90,12 +158,84 @@ const skins = {
     'skin-bot': { icon: 'smart_toy', name: 'Bit Normal' },
     'skin-rocket': { icon: 'rocket_launch', name: 'Bit Cohete' },
     'skin-robot': { icon: 'robot_2', name: 'Premium Bot' },
-    'skin-star': { icon: 'star', name: 'Súper Bit' }
+    'skin-star': { icon: 'star', name: 'Súper Bit' },
+    'skin-galaxy': { icon: 'auto_awesome', name: 'Bit Galáctico' },
+    'skin-gold': { icon: 'workspace_premium', name: 'Bit Dorado' }
 };
 
 function updateMascotUI() {
     const skin = skins[state.activeSkin] || skins['skin-bot'];
     document.getElementById('mascot-icon').innerText = skin.icon;
+}
+
+function addXp(amount) {
+    state.xp += amount;
+    state.coins += Math.floor(amount / 2);
+    updateXpUI();
+    updateCoinsUI();
+    saveGame();
+
+    if (state.coins >= 500) addAchievement('rich');
+}
+
+const moduleInstructions = {
+    1: "¡Bienvenido recluta! En este clan, debes escribir las extensiones que faltan para completar cada grupo. Recuerda: .doc es para texto, .jpg para imágenes, .mp3 para audio y .mp4 para video.",
+    2: "¡A clasificar! Haz clic en la cubeta correcta para enviar el archivo central. ¡No te equivoques o el sistema se agitará!",
+    3: "¡Rápido! El tiempo vuela. Adivina la extensión correcta antes de que el reloj llegue a cero. ¡Cada acierto te da XP!",
+    4: "¡Alerta de intrusos! Hay una extensión que no pertenece al clan mostrado. Encuéntrala y elimínala.",
+    5: "¡Reparación forense! El archivo ha perdido su extensión. Mira de qué clan es y elige la extensión correcta para repararlo.",
+    6: "¡Detective visual! Reconoce el tipo de archivo solo por su icono. ¿Eres capaz de identificarlos todos?",
+    7: "¡Lluvia masiva! Haz clic en cada archivo y escribe a qué clan pertenece para despejar la pantalla.",
+    8: "¡Ojo clínico! Revisa si la extensión del archivo coincide con su nombre. ¿Es real o es un engaño?",
+    9: "¡Superviviencia extrema! Resuelve los acertijos lo más rápido posible. Los aciertos te dan tiempo extra, los fallos te lo quitan.",
+    10: "¡Examen Final! Demuestra todo lo que has aprendido. Tienes 3 vidas para superar los desafíos del Gran Maestro.",
+    99: "¡Bienvenido a la Tienda! Aquí puedes canjear tus Archicoins por nuevos aspectos para Bit y temas para el sistema."
+};
+
+function showInstructions(num) {
+    const modal = document.getElementById('instructions-modal');
+    if (modal) {
+        document.getElementById('inst-title').innerText = num === 99 ? "La Tienda" : `Misión ${num}`;
+        document.getElementById('inst-content').innerText = moduleInstructions[num] || "¡Mucha suerte en esta misión!";
+        modal.classList.remove('hidden');
+    }
+}
+
+function closeInstructions() {
+    document.getElementById('instructions-modal').classList.add('hidden');
+}
+
+// LOGROS
+const achievementsData = [
+    { id: 'first_login', name: 'Primeros Pasos', desc: 'Identifícate por primera vez', xp: 50 },
+    { id: 'module_1', name: 'Aprendiz de Clan', desc: 'Completa el primer módulo', xp: 100 },
+    { id: 'rich', name: 'Ahorrador', desc: 'Consigue 500 monedas', xp: 200 },
+    { id: 'fast_fingers', name: 'Dedos Rápidos', desc: 'Gana 100 XP en Carrera Rápida', xp: 150 }
+];
+
+function addAchievement(id) {
+    if (state.achievements.includes(id)) return;
+    const ach = achievementsData.find(a => a.id === id);
+    if (ach) {
+        state.achievements.push(id);
+        addXp(ach.xp);
+        showAchievementToast(ach);
+        saveGame();
+    }
+}
+
+function showAchievementToast(ach) {
+    const toast = document.createElement('div');
+    toast.className = "fixed bottom-10 right-10 bg-white border-4 border-yellow-400 p-6 rounded-3xl shadow-2xl z-[100] flex items-center gap-4 animate-bounce";
+    toast.innerHTML = `
+        <div class="bg-yellow-100 p-3 rounded-2xl"><span class="material-symbols-outlined text-yellow-600 text-4xl">emoji_events</span></div>
+        <div>
+            <div class="font-black text-yellow-700 text-xl">¡LOGRO DESBLOQUEADO!</div>
+            <div class="font-bold text-slate-600">${ach.name}</div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
 }
 
 // NAVEGACIÓN
@@ -116,12 +256,14 @@ function loadModule(num) {
     else document.getElementById('nav-shop').classList.add('nav-item-active');
 
     // Actualizar visual de botones bloqueados
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 10; i++) {
         const btn = document.getElementById(`nav-${i}`);
-        if (i <= state.unlockedSteps) {
-            btn.classList.remove('opacity-50', 'cursor-not-allowed');
-        } else {
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        if (btn) {
+            if (i <= state.unlockedSteps) {
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
         }
     }
 
@@ -129,6 +271,11 @@ function loadModule(num) {
     if (num === 3) initModule3();
     if (num === 4) initModule4();
     if (num === 5) initModule5();
+    if (num === 6) initModule6();
+    if (num === 7) initModule7();
+    if (num === 8) initModule8();
+    if (num === 9) initModule9();
+    if (num === 10) initModule10();
     if (num === 99) initShop();
 }
 
@@ -140,7 +287,6 @@ function checkTutorialInput(input, correct) {
         input.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
         input.disabled = true;
         state.tutorialInputs++;
-        playSfx('correct');
 
         if (state.tutorialInputs >= tutNeeded) {
             const btn = document.getElementById('btn-tutorial-finish') || document.getElementById('btn-tutorial-next');
@@ -150,6 +296,7 @@ function checkTutorialInput(input, correct) {
             btn.onclick = () => {
                 addXp(100);
                 state.unlockedSteps = 2;
+                addAchievement('module_1');
                 loadModule(2);
             };
         }
@@ -180,7 +327,6 @@ document.querySelectorAll('.bucket').forEach(bucket => {
         const clan = bucket.getAttribute('data-clan');
         if (clan === currentItem2.clan) {
             state.game2Score++;
-            playSfx('correct');
             updateScore2();
             if (state.game2Score >= 10) {
                 addXp(100);
@@ -191,7 +337,6 @@ document.querySelectorAll('.bucket').forEach(bucket => {
                 nextItem2();
             }
         } else {
-            playSfx('wrong');
             document.getElementById('game-item').classList.add('shake');
             setTimeout(() => document.getElementById('game-item').classList.remove('shake'), 500);
         }
@@ -262,11 +407,9 @@ function nextItem3() {
             if (btn.disabled) return;
 
             if (opt === item.ext) {
-                playSfx('correct');
                 addXp(10);
                 nextItem3();
             } else {
-                playSfx('wrong');
                 state.game3Time = Math.max(0, state.game3Time - 3); // Penalización de 3 segundos
                 document.getElementById('timer-box').innerText = `00:${state.game3Time < 10 ? '0' : ''}${state.game3Time}`;
                 document.getElementById('timer-box').classList.add('text-rose-600', 'shake');
@@ -338,7 +481,6 @@ function nextItem4() {
         btn.onclick = () => {
             if (!opt.correct) {
                 state.game4Score++;
-                playSfx('correct');
                 updateScore4();
                 if (state.game4Score >= 10) {
                     addXp(150);
@@ -349,7 +491,6 @@ function nextItem4() {
                     nextItem4();
                 }
             } else {
-                playSfx('wrong');
                 btn.classList.add('shake');
                 setTimeout(() => btn.classList.remove('shake'), 500);
             }
@@ -394,18 +535,15 @@ function nextItem5() {
         btn.onclick = () => {
             if (opt === item.ext) {
                 state.game5Score++;
-                playSfx('correct');
                 updateScore5();
                 if (state.game5Score >= 5) {
                     addXp(200);
-                    playSfx('win');
                     alert("¡FELICIDADES! Te has graduado del Mundo Archivo. ¡Eres un Maestro!");
                     location.reload();
                 } else {
                     nextItem5();
                 }
             } else {
-                playSfx('wrong');
             }
         };
         optsCont.appendChild(btn);
@@ -422,8 +560,11 @@ const shopItems = [
     { id: 'skin-rocket', name: 'Bit Cohete', price: 100, icon: 'rocket_launch', type: 'skin' },
     { id: 'skin-robot', name: 'Premium Bot', price: 250, icon: 'robot_2', type: 'skin' },
     { id: 'skin-star', name: 'Súper Bit', price: 500, icon: 'star', type: 'skin' },
+    { id: 'skin-galaxy', name: 'Bit Galáctico', price: 1000, icon: 'auto_awesome', type: 'skin' },
+    { id: 'skin-gold', name: 'Bit Dorado', price: 2500, icon: 'workspace_premium', type: 'skin' },
     { id: 'theme-green', name: 'Tema Esmeralda', price: 150, icon: 'palette', type: 'theme' },
-    { id: 'theme-pink', name: 'Tema Rosado', price: 150, icon: 'palette', type: 'theme' }
+    { id: 'theme-pink', name: 'Tema Rosado', price: 150, icon: 'palette', type: 'theme' },
+    { id: 'theme-dark', name: 'Modo Hacker', price: 300, icon: 'terminal', type: 'theme' }
 ];
 
 function initShop() {
@@ -472,7 +613,6 @@ function handleShopAction(id) {
     } else if (state.coins >= item.price) {
         state.coins -= item.price;
         state.inventory.push(id);
-        playSfx('win');
         updateCoinsUI();
         handleShopAction(id); // Auto-equipar después de comprar
     }
@@ -483,12 +623,205 @@ function applyTheme(themeId) {
     if (themeId !== 'default') document.body.classList.add(themeId);
 }
 
-function addXp(val) {
-    state.xp += val;
-    state.coins += Math.floor(val / 2); // Ganar monedas proporcional al XP
-    updateXpUI();
-    updateCoinsUI();
-    saveGame();
+// MODULO 6: DETECTIVE VISUAL
+function initModule6() {
+    const icons = {
+        'texto': 'description',
+        'imagen': 'image',
+        'audio': 'audiotrack',
+        'video': 'movie'
+    };
+    const clanKeys = Object.keys(icons);
+    const targetClan = clanKeys[Math.floor(Math.random() * clanKeys.length)];
+
+    document.getElementById('m6-icon').innerText = icons[targetClan];
+    const optionsDiv = document.getElementById('m6-options');
+    optionsDiv.innerHTML = '';
+
+    clanKeys.forEach(clan => {
+        const btn = document.createElement('button');
+        btn.className = "soft-button p-6 text-2xl font-bold text-cyan-700 hover:bg-cyan-50 uppercase";
+        btn.innerText = clan;
+        btn.onclick = () => {
+            if (clan === targetClan) {
+                addXp(20);
+                initModule6();
+            } else {
+                btn.classList.add('shake');
+                setTimeout(() => btn.classList.remove('shake'), 500);
+            }
+        };
+        optionsDiv.appendChild(btn);
+    });
+}
+
+// MODULO 7: ORDEN MASIVO
+function initModule7() {
+    const queue = document.getElementById('m7-queue');
+    queue.innerHTML = '';
+    state.m7Items = [];
+
+    for (let i = 0; i < 8; i++) {
+        const item = filesData[Math.floor(Math.random() * filesData.length)];
+        const el = document.createElement('div');
+        el.className = "p-4 bg-white border-4 border-indigo-100 rounded-2xl font-bold cursor-move hover:scale-105 transition-transform flex items-center gap-2";
+        el.innerHTML = `<span class="material-symbols-outlined text-indigo-400">draft</span> ${item.name}`;
+        el.onclick = () => {
+            const currentClan = prompt(`¿A qué clan pertenece "${item.name}"?\n(texto, imagen, audio, video)`).toLowerCase();
+            if (currentClan === item.clan) {
+                el.remove();
+                addXp(15);
+                if (queue.children.length === 0) {
+                    alert("¡Lluvia despejada!");
+                    state.unlockedSteps = 8;
+                    loadModule(8);
+                }
+            } else {
+            }
+        };
+        queue.appendChild(el);
+    }
+}
+
+// MODULO 8: CAZA ERRORES
+function initModule8() { nextItem8(); }
+function nextItem8() {
+    const isError = Math.random() > 0.5;
+    let file = filesData[Math.floor(Math.random() * filesData.length)];
+    let display = file.name;
+
+    if (isError) {
+        const otherClans = Object.keys(clans).filter(c => c !== file.clan);
+        const wrongClan = otherClans[Math.floor(Math.random() * otherClans.length)];
+        const wrongExt = clans[wrongClan][Math.floor(Math.random() * clans[wrongClan].length)];
+        display = file.name.split('.')[0] + wrongExt;
+    }
+
+    document.getElementById('m8-file-view').innerText = display;
+    state.m8Correct = !isError;
+}
+
+function checkM8(userVal) {
+    if (userVal === state.m8Correct) {
+        addXp(25);
+        state.game8Score = (state.game8Score || 0) + 1;
+        if (state.game8Score >= 10) {
+            state.unlockedSteps = 9;
+            alert("¡Ojo de halcón! Siguiente nivel.");
+            loadModule(9);
+        } else {
+            nextItem8();
+        }
+    } else {
+        document.getElementById('m8-card').classList.add('shake');
+        setTimeout(() => document.getElementById('m8-card').classList.remove('shake'), 500);
+        nextItem8();
+    }
+}
+
+// MODULO 9: SUPERVIVENCIA
+function initModule9() {
+    state.m9Time = 15;
+    if (state.m9Timer) clearInterval(state.m9Timer);
+    state.m9Timer = setInterval(() => {
+        state.m9Time--;
+        document.getElementById('m9-timer').innerText = state.m9Time;
+        if (state.m9Time <= 0) {
+            clearInterval(state.m9Timer);
+            alert("¡Se acabó el tiempo! Reintenta.");
+            loadModule(9);
+        }
+    }, 1000);
+    nextItem9();
+}
+
+function nextItem9() {
+    const item = filesData[Math.floor(Math.random() * filesData.length)];
+    document.getElementById('m9-file').innerText = item.name;
+    const optionsDiv = document.getElementById('m9-options');
+    optionsDiv.innerHTML = '';
+
+    const options = [item.ext];
+    while (options.length < 4) {
+        const r = filesData[Math.floor(Math.random() * filesData.length)].ext;
+        if (!options.includes(r)) options.push(r);
+    }
+
+    options.sort(() => Math.random() - 0.5).forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = "soft-button p-6 text-2xl font-black";
+        btn.innerText = opt;
+        btn.onclick = () => {
+            if (opt === item.ext) {
+                addXp(30);
+                state.m9Time += 2; // Bono de tiempo
+                nextItem9();
+                if (state.xp > 5000) {
+                    clearInterval(state.m9Timer);
+                    state.unlockedSteps = 10;
+                    alert("¡Sobreviviste! El Boss te espera.");
+                    loadModule(10);
+                }
+            } else {
+                state.m9Time -= 3;
+            }
+        };
+        optionsDiv.appendChild(btn);
+    });
+}
+
+// MODULO 10: GRAN MAESTRO
+function initModule10() {
+    state.bossLives = 3;
+    updateBossLives();
+    nextBossChallenge();
+}
+
+function updateBossLives() {
+    document.getElementById('boss-lives').innerText = "❤".repeat(state.bossLives);
+    if (state.bossLives <= 0) {
+        alert("¡Derrotado por el sistema! Reintenta el examen.");
+        loadModule(10);
+    }
+}
+
+function nextBossChallenge() {
+    const arena = document.getElementById('boss-arena');
+    arena.innerHTML = '';
+    const task = document.getElementById('boss-task');
+
+    const types = ['sort', 'detect', 'expert'];
+    const type = types[Math.floor(Math.random() * types.length)];
+
+    if (type === 'sort') {
+        task.innerText = "¡Clasifica esta ráfaga de archivos!";
+        // Mini versión de clasificación masiva
+    } else {
+        task.innerText = "¡Encuentra el error fatal!";
+        // Versión ultra rápida de detector
+    }
+
+    // Simplificado para el boss final: Pregunta de opción múltiple difícil
+    const q = { q: "¿Qué extensión NO pertenece a este clan?", clan: "Imagen", opts: [".jpg", ".png", ".gif", ".exe"], a: ".exe" };
+    arena.innerHTML = `
+        <div class="flex flex-col items-center gap-6">
+            <div class="text-3xl font-bold bg-white p-8 rounded-3xl border-4 text-center border-orange-100 shadow-lg">${q.q} <b>[${q.clan}]</b></div>
+            <div class="grid grid-cols-2 gap-4 w-full">
+                ${q.opts.map(o => `<button class="soft-button p-8 text-2xl font-black text-orange-700 bg-white" onclick="checkBoss('${o}', '${q.a}')">${o}</button>`).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function checkBoss(val, ans) {
+    if (val === ans) {
+        addXp(500);
+        alert("¡FELICIDADES! ERES UNA LEYENDA DIGITAL.");
+        loadModule(99); // A la tienda a gastar
+    } else {
+        state.bossLives--;
+        updateBossLives();
+    }
 }
 
 window.addEventListener('load', () => {
